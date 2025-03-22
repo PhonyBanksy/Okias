@@ -14,7 +14,8 @@ body {
     width: 250px;
     margin-right: 20px;
     overflow-y: auto;
-    padding-right: 10px;
+    border-right: 1px solid #555;
+    padding-right: 20px;
 }
 
 .main-content {
@@ -28,7 +29,7 @@ body {
 .input-output {
     display: flex;
     gap: 20px;
-    height: 40%;
+    height: 45%;
     min-height: 200px;
 }
 
@@ -52,31 +53,18 @@ textarea {
 }
 
 .route-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background: #2e2e2e;
     padding: 10px;
     margin: 5px 0;
     border-radius: 5px;
     cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .route-item:hover {
     background: #3e3e3e;
-}
-
-button {
-    background-color: #007acc;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-button:hover {
-    background-color: #005f99;
 }
 
 .delete-btn {
@@ -95,4 +83,17 @@ button:hover {
     display: flex;
     gap: 10px;
     align-items: center;
+}
+
+button, select {
+    background-color: #007acc;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #005f99;
 }
