@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Waypoint Processor</title>
+  <style>
+    textarea, select, button {
+      margin-top: 10px;
+      display: block;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>JSON Waypoint Processor</h1>
+  <form id="jsonForm">
+    <label for="json_data">Paste your JSON here:</label>
+    <textarea id="json_data" name="json_data" rows="10" cols="50"></textarea>
+    <label for="scale_mode">Scale Mode:</label>
+    <select id="scale_mode" name="scale_mode">
+      <option value="0">No Scaling</option>
+      <option value="1">+50% Y Scale</option>
+      <option value="2">+100% Y Scale</option>
+    </select>
+    <button type="submit">Process JSON</button>
+  </form>
+  
+  <h2>Output:</h2>
+  <pre id="output"></pre>
+
+  <script>
+    document.getElementById('jsonForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const response = await fetch('/process', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await response.json();
+      document.getElementById('output').textContent = JSON.stringify(result, null, 2);
+    };
+  </script>
+</body>
+</html>
