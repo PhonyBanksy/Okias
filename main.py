@@ -6,7 +6,6 @@ import os
 app = Flask(__name__)
 
 def clean_json(content):
-    # Remove trailing commas
     content = re.sub(r',\s*(?=})', '', content)
     content = re.sub(r',\s*(?=])', '', content)
     return content
@@ -14,6 +13,18 @@ def clean_json(content):
 def reverse_and_scale_waypoints(data, scale_mode, reverse=True):
     scale_factors = {0: 1.0, 1: 1.5, 2: 2.0}
     scale_factor = scale_factors.get(scale_mode, 1.0)
+    
+    # Generate processing suffix
+    suffix_parts = []
+    if reverse:
+        suffix_parts.append('R')
+    if scale_mode != 0:
+        suffix_parts.append(f'S{int(scale_factor * 100)}')
+    
+    # Update routeName if exists
+    if "routeName" in data and suffix_parts:
+        base_name = data["routeName"].rsplit('_', 1)[0] if '_' in data["routeName"] else data["routeName"]
+        data["routeName"] = f"{base_name}_{'_'.join(suffix_parts)}"
     
     if "waypoints" in data and isinstance(data["waypoints"], list):
         waypoints = data["waypoints"][::-1] if reverse else data["waypoints"].copy()
