@@ -11,12 +11,13 @@ def clean_json(content):
     content = re.sub(r',\s*(?=])', '', content)
     return content
 
-def reverse_and_scale_waypoints(data, scale_mode):
+def reverse_and_scale_waypoints(data, scale_mode, reverse=True):
     scale_factors = {0: 1.0, 1: 1.5, 2: 2.0}
     scale_factor = scale_factors.get(scale_mode, 1.0)
     
     if "waypoints" in data and isinstance(data["waypoints"], list):
-        waypoints = data["waypoints"][::-1]
+        waypoints = data["waypoints"][::-1] if reverse else data["waypoints"].copy()
+        
         if scale_mode != 0:
             for wp in waypoints:
                 if "scale3D" in wp and "y" in wp["scale3D"]:
@@ -35,8 +36,9 @@ def process():
     try:
         json_data = request.form.get('json_data')
         scale_mode = int(request.form.get('scale_mode'))
+        reverse = request.form.get('reverse', 'true').lower() == 'true'
         data = json.loads(clean_json(json_data))
-        result = reverse_and_scale_waypoints(data, scale_mode)
+        result = reverse_and_scale_waypoints(data, scale_mode, reverse)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)})

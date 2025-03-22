@@ -29,8 +29,9 @@
       border: 1px solid #555;
       padding: 10px;
       border-radius: 8px;
+      resize: none;
     }
-    button, select {
+    button, select, input {
       background-color: #007acc;
       color: white;
       border: none;
@@ -38,6 +39,11 @@
       margin-top: 10px;
       cursor: pointer;
       border-radius: 8px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
     }
     button:hover {
       background-color: #005f99;
@@ -47,6 +53,19 @@
       flex-direction: column;
       width: 45%;
     }
+    .route-item {
+      background: #2e2e2e;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .route-buttons button {
+      margin-left: 5px;
+      padding: 5px 10px;
+    }
   </style>
 </head>
 <body>
@@ -55,11 +74,15 @@
     <div class="column">
       <h3>Input JSON</h3>
       <textarea id="json_data" placeholder="Paste your JSON here..."></textarea>
+      <input type="text" id="routeName" placeholder="Route name">
       <select id="scale_mode">
         <option value="0">No Scaling</option>
         <option value="1">+50% Y Scale</option>
         <option value="2">+100% Y Scale</option>
       </select>
+      <label style="color: #fff; margin: 10px 0;">
+        <input type="checkbox" id="reverse" checked> Reverse Waypoints
+      </label>
       <button onclick="processJson()">Process JSON</button>
       <button onclick="clearInput()">Clear Input</button>
     </div>
@@ -71,25 +94,89 @@
     </div>
   </div>
 
+  <div style="margin: 20px auto; max-width: 90%;">
+    <h3>Saved Routes</h3>
+    <div id="routeList"></div>
+  </div>
+
   <script>
+    // LocalStorage operations
+    function saveRoute(name, input, output) {
+      const routes = JSON.parse(localStorage.getItem('routes') || '[]');
+      routes.push({
+        name,
+        input,
+        output,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('routes', JSON.stringify(routes));
+      updateRouteList();
+    }
+
+    function deleteRoute(index) {
+      const routes = JSON.parse(localStorage.getItem('routes') || '[]');
+      routes.splice(index, 1);
+      localStorage.setItem('routes', JSON.stringify(routes));
+      updateRouteList();
+    }
+
+    function loadRoute(index) {
+      const routes = JSON.parse(localStorage.getItem('routes') || '[]');
+      const route = routes[index];
+      document.getElementById('json_data').value = route.input;
+      document.getElementById('output').value = route.output;
+      document.getElementById('routeName').value = route.name;
+    }
+
+    function updateRouteList() {
+      const routeList = document.getElementById('routeList');
+      routeList.innerHTML = '';
+      const routes = JSON.parse(localStorage.getItem('routes') || []);
+
+      routes.forEach((route, index) => {
+        const routeElement = document.createElement('div');
+        routeElement.className = 'route-item';
+        routeElement.innerHTML = `
+          <div>
+            <strong>${route.name}</strong><br>
+            <small>${new Date(route.timestamp).toLocaleString()}</small>
+          </div>
+          <div class="route-buttons">
+            <button onclick="loadRoute(${index})">Load</button>
+            <button onclick="deleteRoute(${index})">Delete</button>
+          </div>
+        `;
+        routeList.appendChild(routeElement);
+      });
+    }
+
+    // Main processing function
     async function processJson() {
       const jsonData = document.getElementById('json_data').value;
       const scaleMode = document.getElementById('scale_mode').value;
+      const reverse = document.getElementById('reverse').checked;
+      const routeName = document.getElementById('routeName').value || 'Unnamed Route';
+
       const formData = new FormData();
       formData.append('json_data', jsonData);
       formData.append('scale_mode', scaleMode);
+      formData.append('reverse', reverse);
+
       try {
         const response = await fetch('/process', {
           method: 'POST',
           body: formData,
         });
         const result = await response.json();
+        
         document.getElementById('output').value = JSON.stringify(result, null, 2);
+        saveRoute(routeName, jsonData, JSON.stringify(result, null, 2));
       } catch (error) {
-        document.getElementById('output').value = 'Error: ' + error;
+        document.getElementById('output').value = 'Error: ' + error.message;
       }
     }
 
+    // Utility functions
     function copyOutput() {
       const output = document.getElementById('output');
       output.select();
@@ -99,11 +186,15 @@
 
     function clearInput() {
       document.getElementById('json_data').value = '';
+      document.getElementById('routeName').value = '';
     }
 
     function clearOutput() {
       document.getElementById('output').value = '';
     }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', updateRouteList);
   </script>
 </body>
 </html>
