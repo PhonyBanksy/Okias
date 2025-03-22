@@ -5,45 +5,105 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JSON Waypoint Processor</title>
   <style>
-    textarea, select, button {
-      margin-top: 10px;
-      display: block;
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1e1e1e;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
     }
-    pre {
-      background-color: #f4f4f4;
+    h1 {
+      text-align: center;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 400px;
+      background-color: #2e2e2e;
+      color: #fff;
+      border: 1px solid #555;
       padding: 10px;
-      border-radius: 5px;
+      border-radius: 8px;
+    }
+    button, select {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 10px;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    button:hover {
+      background-color: #005f99;
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      width: 45%;
     }
   </style>
 </head>
 <body>
   <h1>JSON Waypoint Processor</h1>
-  <form id="jsonForm">
-    <label for="json_data">Paste your JSON here:</label>
-    <textarea id="json_data" name="json_data" rows="10" cols="50"></textarea>
-    <label for="scale_mode">Scale Mode:</label>
-    <select id="scale_mode" name="scale_mode">
-      <option value="0">No Scaling</option>
-      <option value="1">+50% Y Scale</option>
-      <option value="2">+100% Y Scale</option>
-    </select>
-    <button type="submit">Process JSON</button>
-  </form>
-  
-  <h2>Output:</h2>
-  <pre id="output"></pre>
+  <div class="container">
+    <div class="column">
+      <h3>Input JSON</h3>
+      <textarea id="json_data" placeholder="Paste your JSON here..."></textarea>
+      <select id="scale_mode">
+        <option value="0">No Scaling</option>
+        <option value="1">+50% Y Scale</option>
+        <option value="2">+100% Y Scale</option>
+      </select>
+      <button onclick="processJson()">Process JSON</button>
+      <button onclick="clearInput()">Clear Input</button>
+    </div>
+    <div class="column">
+      <h3>Output JSON</h3>
+      <textarea id="output" readonly></textarea>
+      <button onclick="copyOutput()">Copy Output</button>
+      <button onclick="clearOutput()">Clear Output</button>
+    </div>
+  </div>
 
   <script>
-    document.getElementById('jsonForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const response = await fetch('/process', {
-        method: 'POST',
-        body: formData,
-      });
-      const result = await response.json();
-      document.getElementById('output').textContent = JSON.stringify(result, null, 2);
-    };
+    async function processJson() {
+      const jsonData = document.getElementById('json_data').value;
+      const scaleMode = document.getElementById('scale_mode').value;
+      const formData = new FormData();
+      formData.append('json_data', jsonData);
+      formData.append('scale_mode', scaleMode);
+      try {
+        const response = await fetch('/process', {
+          method: 'POST',
+          body: formData,
+        });
+        const result = await response.json();
+        document.getElementById('output').value = JSON.stringify(result, null, 2);
+      } catch (error) {
+        document.getElementById('output').value = 'Error: ' + error;
+      }
+    }
+
+    function copyOutput() {
+      const output = document.getElementById('output');
+      output.select();
+      navigator.clipboard.writeText(output.value);
+      alert('Output copied to clipboard!');
+    }
+
+    function clearInput() {
+      document.getElementById('json_data').value = '';
+    }
+
+    function clearOutput() {
+      document.getElementById('output').value = '';
+    }
   </script>
 </body>
 </html>
