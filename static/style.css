@@ -99,3 +99,33 @@ input[type="checkbox"] {
     width: 16px;
     height: 16px;
 }
+.route-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    background: #2e2e2e;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.delete-btn {
+    background-color: #cc0000 !important;
+    padding: 2px 8px !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+}
+
+.delete-btn:hover {
+    background-color: #990000 !important;
+}
+
+.route-item span {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.route-item:hover {
+    background: #3e3e3e;
+}
