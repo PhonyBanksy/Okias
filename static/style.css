@@ -23,7 +23,6 @@ body {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 40px);
-    min-height: 0;
 }
 
 .input-output {
@@ -53,29 +52,11 @@ textarea {
 }
 
 .route-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     background: #2e2e2e;
     padding: 10px;
     margin: 5px 0;
     border-radius: 5px;
     cursor: pointer;
-}
-
-.route-item:hover {
-    background: #3e3e3e;
-}
-
-.delete-btn {
-    background-color: #cc0000 !important;
-    padding: 2px 8px !important;
-    margin-left: 10px !important;
-    border-radius: 50% !important;
-}
-
-.delete-btn:hover {
-    background-color: #990000 !important;
 }
 
 .controls {
@@ -96,4 +77,25 @@ button, select {
 
 button:hover {
     background-color: #005f99;
+}
+
+.clear-cache-btn {
+    background-color: #cc0000 !important;
+    margin-top: 15px;
+}
+
+.clear-cache-btn:hover {
+    background-color: #990000 !important;
+}
+
+label {
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
 }
