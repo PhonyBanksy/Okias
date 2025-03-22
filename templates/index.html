@@ -11,19 +11,21 @@
       color: #fff;
       margin: 0;
       padding: 20px;
-      height: 100vh;
-      display: flex;
+      height: calc(100vh - 40px); /* Fixed height */
+      overflow: hidden;
     }
     .saved-routes {
       width: 25%;
       margin-right: 20px;
       overflow-y: auto;
+      height: 100%;
     }
     .main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
       gap: 20px;
+      height: 100%;
     }
     .input-output {
       display: flex;
@@ -44,7 +46,7 @@
       background-color: #2e2e2e;
       border: 1px solid #555;
       border-radius: 8px;
-      min-height: 0; /* Allows proper canvas scaling */
+      min-height: 0;
     }
     .route-item {
       background: #2e2e2e;
@@ -114,20 +116,28 @@
       ctx.fillStyle = '#fff';
       ctx.lineWidth = 2;
 
+      // Get valid waypoints with positions
+      const validWaypoints = currentWaypoints.filter(wp => wp.position && 
+        typeof wp.position.x !== 'undefined' && 
+        typeof wp.position.z !== 'undefined');
+
+      if (validWaypoints.length === 0) return;
+
       // Find bounds
-      const xCoords = currentWaypoints.map(wp => wp.position?.x || 0);
-      const zCoords = currentWaypoints.map(wp => wp.position?.z || 0);
+      const xCoords = validWaypoints.map(wp => wp.position.x);
+      const zCoords = validWaypoints.map(wp => wp.position.z);
       const minX = Math.min(...xCoords);
       const maxX = Math.max(...xCoords);
       const minZ = Math.min(...zCoords);
       const maxZ = Math.max(...zCoords);
+      
       const scaleX = canvas.width / (maxX - minX || 1);
       const scaleZ = canvas.height / (maxZ - minZ || 1);
       const scale = Math.min(scaleX, scaleZ) * 0.8;
 
       // Draw connections
       ctx.beginPath();
-      currentWaypoints.forEach((wp, i) => {
+      validWaypoints.forEach((wp, i) => {
         const x = (wp.position.x - minX) * scale + canvas.width * 0.1;
         const y = (wp.position.z - minZ) * scale + canvas.height * 0.1;
         if (i === 0) {
@@ -139,7 +149,7 @@
       ctx.stroke();
 
       // Draw points
-      currentWaypoints.forEach(wp => {
+      validWaypoints.forEach(wp => {
         const x = (wp.position.x - minX) * scale + canvas.width * 0.1;
         const y = (wp.position.z - minZ) * scale + canvas.height * 0.1;
         ctx.beginPath();
@@ -167,7 +177,9 @@
     function updateRouteList() {
       const routeList = document.getElementById('routeList');
       routeList.innerHTML = '';
-      JSON.parse(localStorage.getItem('routes') || []).forEach((route, index) => {
+      const routes = JSON.parse(localStorage.getItem('routes') || []);
+      
+      routes.forEach((route, index) => {
         const div = document.createElement('div');
         div.className = 'route-item';
         div.innerHTML = JSON.parse(route.output).routeName;
@@ -177,11 +189,18 @@
     }
 
     function loadRoute(index) {
-      const route = JSON.parse(localStorage.getItem('routes'))[index];
+      const routes = JSON.parse(localStorage.getItem('routes') || []);
+      const route = routes[index];
+      if (!route) return;
+      
       document.getElementById('json_data').value = route.input;
       document.getElementById('output').value = route.output;
-      currentWaypoints = JSON.parse(route.output).waypoints || [];
-      drawRoute();
+      try {
+        currentWaypoints = JSON.parse(route.output).waypoints || [];
+        drawRoute();
+      } catch (e) {
+        console.error('Error loading route:', e);
+      }
     }
 
     async function processJson() {
