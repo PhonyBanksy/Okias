@@ -14,8 +14,7 @@ body {
     width: 250px;
     margin-right: 20px;
     overflow-y: auto;
-    border-right: 1px solid #555;
-    padding-right: 20px;
+    padding-right: 10px;
 }
 
 .main-content {
@@ -23,12 +22,13 @@ body {
     display: flex;
     flex-direction: column;
     height: calc(100vh - 40px);
+    min-height: 0;
 }
 
 .input-output {
     display: flex;
     gap: 20px;
-    height: 45%;
+    height: 40%;
     min-height: 200px;
 }
 
@@ -57,16 +57,16 @@ textarea {
     margin: 5px 0;
     border-radius: 5px;
     cursor: pointer;
-}
-
-.controls {
-    margin-top: 20px;
     display: flex;
-    gap: 10px;
+    justify-content: space-between;
     align-items: center;
 }
 
-button, select {
+.route-item:hover {
+    background: #3e3e3e;
+}
+
+button {
     background-color: #007acc;
     color: white;
     border: none;
@@ -79,41 +79,10 @@ button:hover {
     background-color: #005f99;
 }
 
-.clear-cache-btn {
-    background-color: #cc0000 !important;
-    margin-top: 15px;
-}
-
-.clear-cache-btn:hover {
-    background-color: #990000 !important;
-}
-
-label {
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-}
-.route-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    margin: 5px 0;
-    background: #2e2e2e;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
 .delete-btn {
     background-color: #cc0000 !important;
     padding: 2px 8px !important;
-    margin: 0 !important;
+    margin-left: 10px !important;
     border-radius: 50% !important;
 }
 
@@ -121,11 +90,9 @@ input[type="checkbox"] {
     background-color: #990000 !important;
 }
 
-.route-item span {
-    flex-grow: 1;
-    margin-right: 10px;
-}
-
-.route-item:hover {
-    background: #3e3e3e;
+.controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }

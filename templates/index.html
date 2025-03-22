@@ -1,214 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JSON Waypoint Processor</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #1e1e1e;
-      color: #fff;
-      margin: 0;
-      padding: 20px;
-      height: 100vh;
-      display: flex;
-    }
-    .saved-routes {
-      width: 25%;
-      margin-right: 20px;
-      overflow-y: auto;
-    }
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .input-output {
-      display: flex;
-      gap: 20px;
-      height: 40%;
-    }
-    textarea {
-      flex: 1;
-      background-color: #2e2e2e;
-      color: #fff;
-      border: 1px solid #555;
-      padding: 10px;
-      border-radius: 8px;
-      resize: none;
-    }
-    #routeCanvas {
-      flex: 1;
-      background-color: #2e2e2e;
-      border: 1px solid #555;
-      border-radius: 8px;
-      min-height: 0; /* Allows proper canvas scaling */
-    }
-    .route-item {
-      background: #2e2e2e;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button {
-      background-color: #007acc;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      margin: 5px 0;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    button:hover {
-      background-color: #005f99;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Waypoint Processor</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="saved-routes">
-    <h3>Saved Routes</h3>
-    <div id="routeList"></div>
-  </div>
-
-  <div class="main-content">
-    <div class="input-output">
-      <textarea id="json_data" placeholder="Input JSON"></textarea>
-      <textarea id="output" placeholder="Output JSON" readonly></textarea>
+    <div class="saved-routes">
+        <h3>Saved Routes</h3>
+        <div id="routeList"></div>
     </div>
-    <canvas id="routeCanvas"></canvas>
-    <div>
-      <select id="scale_mode">
-        <option value="0">No Scaling</option>
-        <option value="1">+50% Y Scale</option>
-        <option value="2">+100% Y Scale</option>
-      </select>
-      <label>
-        <input type="checkbox" id="reverse" checked> Reverse
-      </label>
-      <button onclick="processJson()">Process</button>
-      <button onclick="copyOutput()">Copy</button>
+
+    <div class="main-content">
+        <div class="input-output">
+            <textarea id="json_data" placeholder="Input JSON"></textarea>
+            <textarea id="output" placeholder="Output JSON" readonly></textarea>
+        </div>
+        <canvas id="routeCanvas"></canvas>
+        <div class="controls">
+            <select id="scale_mode">
+                <option value="0">No Scaling</option>
+                <option value="1">+50% Y Scale</option>
+                <option value="2">+100% Y Scale</option>
+            </select>
+            <label>
+                <input type="checkbox" id="reverse" checked> Reverse
+            </label>
+            <button onclick="processJson()">Process</button>
+            <button onclick="copyOutput()">Copy</button>
+        </div>
     </div>
-  </div>
 
-  <script>
-    const canvas = document.getElementById('routeCanvas');
-    const ctx = canvas.getContext('2d');
-    let currentWaypoints = [];
+    <script>
+        const canvas = document.getElementById('routeCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentWaypoints = [];
 
-    function resizeCanvas() {
-      const container = document.querySelector('.main-content');
-      const size = Math.min(container.clientWidth, container.clientHeight * 0.5);
-      canvas.width = size;
-      canvas.height = size;
-      drawRoute();
-    }
-
-    function drawRoute() {
-      if (!currentWaypoints.length) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = '#007acc';
-      ctx.fillStyle = '#fff';
-      ctx.lineWidth = 2;
-
-      // Find bounds
-      const xCoords = currentWaypoints.map(wp => wp.position?.x || 0);
-      const zCoords = currentWaypoints.map(wp => wp.position?.z || 0);
-      const minX = Math.min(...xCoords);
-      const maxX = Math.max(...xCoords);
-      const minZ = Math.min(...zCoords);
-      const maxZ = Math.max(...zCoords);
-      const scaleX = canvas.width / (maxX - minX || 1);
-      const scaleZ = canvas.height / (maxZ - minZ || 1);
-      const scale = Math.min(scaleX, scaleZ) * 0.8;
-
-      // Draw connections
-      ctx.beginPath();
-      currentWaypoints.forEach((wp, i) => {
-        const x = (wp.position.x - minX) * scale + canvas.width * 0.1;
-        const y = (wp.position.z - minZ) * scale + canvas.height * 0.1;
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
+        function resizeCanvas() {
+            const container = document.querySelector('.main-content');
+            const size = Math.min(container.clientWidth, container.clientHeight * 0.5);
+            canvas.width = size;
+            canvas.height = size;
+            drawRoute();
         }
-      });
-      ctx.stroke();
 
-      // Draw points
-      currentWaypoints.forEach(wp => {
-        const x = (wp.position.x - minX) * scale + canvas.width * 0.1;
-        const y = (wp.position.z - minZ) * scale + canvas.height * 0.1;
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    }
+        function drawRoute() {
+            if (!currentWaypoints.length) return;
 
-    // LocalStorage and processing functions
-    function saveRoute(outputJson) {
-      const routes = JSON.parse(localStorage.getItem('routes') || []);
-      const routeData = JSON.parse(outputJson);
-      
-      routes.push({
-        name: routeData.routeName,
-        input: document.getElementById('json_data').value,
-        output: outputJson,
-        timestamp: new Date().toISOString()
-      });
-      
-      localStorage.setItem('routes', JSON.stringify(routes));
-      updateRouteList();
-    }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#007acc';
+            ctx.fillStyle = '#fff';
+            ctx.lineWidth = 2;
 
-    function updateRouteList() {
-      const routeList = document.getElementById('routeList');
-      routeList.innerHTML = '';
-      JSON.parse(localStorage.getItem('routes') || []).forEach((route, index) => {
-        const div = document.createElement('div');
-        div.className = 'route-item';
-        div.innerHTML = JSON.parse(route.output).routeName;
-        div.onclick = () => loadRoute(index);
-        routeList.appendChild(div);
-      });
-    }
+            const xCoords = currentWaypoints.map(wp => wp.position?.x || 0);
+            const zCoords = currentWaypoints.map(wp => wp.position?.z || 0);
+            const minX = Math.min(...xCoords);
+            const maxX = Math.max(...xCoords);
+            const minZ = Math.min(...zCoords);
+            const maxZ = Math.max(...zCoords);
+            const scaleX = canvas.width / (maxX - minX || 1);
+            const scaleZ = canvas.height / (maxZ - minZ || 1);
+            const scale = Math.min(scaleX, scaleZ) * 0.8;
 
-    function loadRoute(index) {
-      const route = JSON.parse(localStorage.getItem('routes'))[index];
-      document.getElementById('json_data').value = route.input;
-      document.getElementById('output').value = route.output;
-      currentWaypoints = JSON.parse(route.output).waypoints || [];
-      drawRoute();
-    }
+            ctx.beginPath();
+            currentWaypoints.forEach((wp, i) => {
+                const x = (wp.position.x - minX) * scale + canvas.width * 0.1;
+                const y = (wp.position.z - minZ) * scale + canvas.height * 0.1;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
 
-    async function processJson() {
-      const formData = new FormData();
-      formData.append('json_data', document.getElementById('json_data').value);
-      formData.append('scale_mode', document.getElementById('scale_mode').value);
-      formData.append('reverse', document.getElementById('reverse').checked);
+            currentWaypoints.forEach(wp => {
+                const x = (wp.position.x - minX) * scale + canvas.width * 0.1;
+                const y = (wp.position.z - minZ) * scale + canvas.height * 0.1;
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
 
-      try {
-        const response = await fetch('/process', { method: 'POST', body: formData });
-        const result = await response.json();
-        const outputJson = JSON.stringify(result, null, 2);
-        
-        document.getElementById('output').value = outputJson;
-        currentWaypoints = result.waypoints || [];
-        drawRoute();
-        saveRoute(outputJson);
-      } catch (error) {
-        document.getElementById('output').value = 'Error: ' + error.message;
-      }
-    }
+        function saveRoute(outputJson) {
+            const routes = JSON.parse(localStorage.getItem('routes') || '[]');
+            const routeData = JSON.parse(outputJson);
+            
+            routes.push({
+                name: routeData.routeName,
+                input: document.getElementById('json_data').value,
+                output: outputJson,
+                timestamp: new Date().toISOString()
+            });
+            
+            localStorage.setItem('routes', JSON.stringify(routes));
+            updateRouteList();
+        }
 
-    window.addEventListener('resize', resizeCanvas);
-    document.addEventListener('DOMContentLoaded', () => {
-      resizeCanvas();
-      updateRouteList();
-    });
-  </script>
+        function updateRouteList() {
+            const routeList = document.getElementById('routeList');
+            routeList.innerHTML = '';
+            JSON.parse(localStorage.getItem('routes') || '[]').forEach((route, index) => {
+                const div = document.createElement('div');
+                div.className = 'route-item';
+                div.innerHTML = `
+                    ${JSON.parse(route.output).routeName}
+                    <button class="delete-btn" onclick="deleteRoute(${index})">X</button>
+                `;
+                div.onclick = () => loadRoute(index);
+                routeList.appendChild(div);
+            });
+        }
+
+        function deleteRoute(index) {
+            const routes = JSON.parse(localStorage.getItem('routes') || '[]');
+            routes.splice(index, 1);
+            localStorage.setItem('routes', JSON.stringify(routes));
+            updateRouteList();
+        }
+
+        function loadRoute(index) {
+            const routes = JSON.parse(localStorage.getItem('routes') || '[]');
+            const route = routes[index];
+            if (!route) return;
+            document.getElementById('json_data').value = route.input;
+            document.getElementById('output').value = route.output;
+            try {
+                currentWaypoints = JSON.parse(route.output).waypoints || [];
+                drawRoute();
+            } catch(e) {
+                console.error('Error loading route:', e);
+            }
+        }
+
+        async function processJson() {
+            try {
+                const formData = new FormData();
+                formData.append('json_data', document.getElementById('json_data').value);
+                formData.append('scale_mode', document.getElementById('scale_mode').value);
+                formData.append('reverse', document.getElementById('reverse').checked);
+
+                const response = await fetch('/process', { method: 'POST', body: formData });
+                const result = await response.json();
+                const outputJson = JSON.stringify(result, null, 2);
+                
+                document.getElementById('output').value = outputJson;
+                currentWaypoints = result.waypoints || [];
+                drawRoute();
+                saveRoute(outputJson);
+            } catch (error) {
+                document.getElementById('output').value = 'Error: ' + error.message;
+            }
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('output');
+            output.select();
+            navigator.clipboard.writeText(output.value);
+            alert('Output copied to clipboard!');
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        document.addEventListener('DOMContentLoaded', () => {
+            resizeCanvas();
+            updateRouteList();
+        });
+    </script>
 </body>
 </html>
