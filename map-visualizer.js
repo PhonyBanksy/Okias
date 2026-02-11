@@ -28,7 +28,25 @@ export function MapVisualizer(canvasContainerId = 'routeCanvas', outputFieldId =
     let waypointsRendered = [];
     let activeWpIndex = -1;
 
-    // --- MAP LOADING ---
+	const setupMapLoading = () => {
+    mapImage.onload = () => {
+        mapLoaded = true;
+        statusText.textContent = "Map Loaded (map.jpg)";
+        statusText.style.color = "#4caf50";
+        console.log('✓ Map loaded successfully from:', mapImage.src);
+        draw();
+    };
+    mapImage.onerror = () => {
+        mapLoaded = false;
+        statusText.textContent = "Auto-load failed. Select map manually.";
+        statusText.style.color = "#ff9800";
+        console.error('✗ Failed to load map from:', mapImage.src);
+        draw();
+    };
+    console.log('Attempting to load map from: map.jpg');
+    mapImage.src = 'map.jpg';
+    
+	// --- MAP LOADING ---
     const setupMapLoading = () => {
         mapImage.onload = () => {
             mapLoaded = true;
